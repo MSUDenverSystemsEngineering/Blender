@@ -127,7 +127,8 @@ Try {
 		Show-InstallationProgress
 
 		## <Perform Pre-Installation tasks here>
-
+		## Uninstall Previous Blender Installation
+		Execute-MSI -Action Uninstall -Path '{DEA73CCA-7EC9-41EA-8509-1041C1CABFD0}'
 
 		##*===============================================
 		##* INSTALLATION
