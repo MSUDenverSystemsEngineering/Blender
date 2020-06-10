@@ -184,7 +184,9 @@ Try {
 		}
 
 		# <Perform Uninstallation tasks here>
-		Execute-MSI -Action Uninstall -Path '{C39F5740-3CB7-44AC-B0A2-FA3B2754D02F}'
+		$exitCode = Execute-MSI -Action Uninstall -Path '{C39F5740-3CB7-44AC-B0A2-FA3B2754D02F}'
+		Start-Sleep -s 10
+		If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
 
 		##*===============================================
 		##* POST-UNINSTALLATION
