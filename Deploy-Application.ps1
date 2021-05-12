@@ -144,7 +144,7 @@ Try {
 		}
 
 		## <Perform Installation tasks here>
-		$exitCode = Execute-MSI -Path "$dirFiles\blender-2.92.0-windows64.msi" -Parameters "/qn" -PassThru
+		$exitCode = Execute-MSI -Path "$dirFiles\blender-2.92.0.msi" -Parameters "/qn" -PassThru
 		If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
 
 
