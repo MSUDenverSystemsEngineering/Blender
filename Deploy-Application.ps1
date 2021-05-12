@@ -186,7 +186,7 @@ Try {
 		}
 
 		# <Perform Uninstallation tasks here>
-		Remove-MSIApplications -Name 'Blender' -PassThru
+		Execute-MSI -Action 'Uninstall' -Path '{D6E38255-FB12-4724-A6FF-075B43272C66}'
 
 		##*===============================================
 		##* POST-UNINSTALLATION
