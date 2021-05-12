@@ -186,7 +186,8 @@ Try {
 		}
 
 		# <Perform Uninstallation tasks here>
-		Execute-MSI -Action 'Uninstall' -Path '{D6E38255-FB12-4724-A6FF-075B43272C66}'
+		##Execute-MSI -Action 'Uninstall' -Path '{D6E38255-FB12-4724-A6FF-075B43272C66}'
+		Execute-MSI -Action Uninstall -Path "$dirFiles\blender-2.92.0-windows64.msi" -Parameters "/qn" -PassThru
 
 		##*===============================================
 		##* POST-UNINSTALLATION
