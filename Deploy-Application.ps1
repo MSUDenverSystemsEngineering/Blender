@@ -121,7 +121,7 @@ Try {
 		[string]$installPhase = 'Pre-Installation'
 
 		## Show Welcome Message, close Internet Explorer if required, verify there is enough disk space to complete the install, and persist the prompt
-		Show-InstallationWelcome -CloseApps 'blender,iexplore' -CheckDiskSpace -PersistPrompt
+		Show-InstallationWelcome -CloseApps 'blender,' -CheckDiskSpace -PersistPrompt
 
 		## Show Progress Message (with the default message)
 		Show-InstallationProgress
@@ -145,7 +145,7 @@ Try {
 
 		## <Perform Installation tasks here>
 		$exitCode = Execute-MSI -Path "$dirFiles\blender-2.92.0-windows64.msi" -Parameters "/qn" -PassThru
-        If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
+		If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
 
 
 		##*===============================================
