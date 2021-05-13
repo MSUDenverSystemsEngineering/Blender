@@ -128,9 +128,9 @@ Try {
 
 		## <Perform Pre-Installation tasks here>
 		## Uninstall two previous versions
-		## Execute-MSI -Action Uninstall -Path '{DEA73CCA-7EC9-41EA-8509-1041C1CABFD0}'
-		## Execute-MSI -Action Uninstall -Path '{C39F5740-3CB7-44AC-B0A2-FA3B2754D02F}'
-		Remove-MSIApplications -Name 'Blender' -PassThru
+		Execute-MSI -Action Uninstall -Path '{DEA73CCA-7EC9-41EA-8509-1041C1CABFD0}'
+		Execute-MSI -Action Uninstall -Path '{C39F5740-3CB7-44AC-B0A2-FA3B2754D02F}'
+		Execute-MSI -Action 'Uninstall' -Path '{D6E38255-FB12-4724-A6FF-075B43272C66}'
 
 		##*===============================================
 		##* INSTALLATION
