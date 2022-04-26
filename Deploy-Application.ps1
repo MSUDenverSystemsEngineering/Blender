@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
 	This script performs the installation or uninstallation of an application(s).
 	# LICENSE #
@@ -37,6 +37,10 @@
 .LINK
 	http://psappdeploytoolkit.com
 #>
+
+## Suppress PSScriptAnalyzer errors for not using declared variables during AppVeyor build
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "", Justification="Suppress AppVeyor errors on unused variables below")]
+
 [CmdletBinding()]
 Param (
 	[Parameter(Mandatory=$false)]
@@ -55,7 +59,7 @@ Param (
 
 Try {
 	## Set the script execution policy for this process
-	Try { Set-ExecutionPolicy -ExecutionPolicy 'ByPass' -Scope 'Process' -Force -ErrorAction 'Stop' } Catch {}
+	Try { Set-ExecutionPolicy -ExecutionPolicy 'ByPass' -Scope 'Process' -Force -ErrorAction 'Stop' } Catch { Write-Error "Failed to set the execution policy to Bypass for this process." }
 
 	##*===============================================
 	##* VARIABLE DECLARATION
@@ -83,8 +87,8 @@ Try {
 
 	## Variables: Script
 	[string]$deployAppScriptFriendlyName = 'Deploy Application'
-	[version]$deployAppScriptVersion = [version]'3.8.4'
-	[string]$deployAppScriptDate = '26/01/2021'
+	[version]$deployAppScriptVersion = [version]'3.8.3'
+	[string]$deployAppScriptDate = '30/09/2020'
 	[hashtable]$deployAppScriptParameters = $psBoundParameters
 
 	## Variables: Environment
@@ -116,14 +120,13 @@ Try {
 		##*===============================================
 		[string]$installPhase = 'Pre-Installation'
 
-		## Show Welcome Message, close Internet Explorer if required, allow up to 3 deferrals, verify there is enough disk space to complete the install, and persist the prompt
+		## Show Welcome Message, close Internet Explorer if required, verify there is enough disk space to complete the install, and persist the prompt
 		Show-InstallationWelcome -CloseApps 'blender,' -CheckDiskSpace -PersistPrompt
 
 		## Show Progress Message (with the default message)
 		Show-InstallationProgress
 
 		## <Perform Pre-Installation tasks here>
-
 		## Uninstall current and previous versions
 
 		#Uninstall Blender 3.1.2 (current version)
@@ -134,7 +137,6 @@ Try {
 		Execute-MSI -Action Uninstall -Path '{C39F5740-3CB7-44AC-B0A2-FA3B2754D02F}' -PassThru -ContinueOnError $true
 		#Uninstall some other version
 		Execute-MSI -Action Uninstall -Path '{DEA73CCA-7EC9-41EA-8509-1041C1CABFD0}' -PassThru -ContinueOnError $true
-
 
 		##*===============================================
 		##* INSTALLATION
@@ -199,7 +201,8 @@ Try {
 		Execute-MSI -Action Uninstall -Path '{C39F5740-3CB7-44AC-B0A2-FA3B2754D02F}' -PassThru -ContinueOnError $true
 		#Uninstall some other version
 		Execute-MSI -Action Uninstall -Path '{DEA73CCA-7EC9-41EA-8509-1041C1CABFD0}' -PassThru -ContinueOnError $true
-
+		
+		
 
 		##*===============================================
 		##* POST-UNINSTALLATION
@@ -233,6 +236,10 @@ Try {
 			Execute-MSI @ExecuteDefaultMSISplat
 		}
 		# <Perform Repair tasks here>
+		$exitCode = Execute-MSI -Action Repair -Path "$dirFiles\blender-3.1.2-windows-x64.msi" -Parameters "/qn" -PassThru
+		If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
+
+
 
 		##*===============================================
 		##* POST-REPAIR
@@ -240,9 +247,6 @@ Try {
 		[string]$installPhase = 'Post-Repair'
 
 		## <Perform Post-Repair tasks here>
-
-		$exitCode = Execute-MSI -Action Repair -Path "$dirFiles\blender-3.1.2-windows-x64.msi" -Parameters "/qn" -PassThru
-		If (($exitCode.ExitCode -ne "0") -and ($mainExitCode -ne "3010")) { $mainExitCode = $exitCode.ExitCode }
 
 
     }
@@ -260,12 +264,11 @@ Catch {
 	Show-DialogBox -Text $mainErrorMessage -Icon 'Stop'
 	Exit-Script -ExitCode $mainExitCode
 }
-
 # SIG # Begin signature block
 # MIImZwYJKoZIhvcNAQcCoIImWDCCJlQCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCcyYeyrhu20aLj
-# F4w9Io3M/UfVPsFtXhA3/PFFy680wqCCH9IwggVvMIIEV6ADAgECAhBI/JO0YFWU
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCFxnb0N1opM22w
+# 00S0NuDzfU6jaR9gS/2/GYvJfJ6P1aCCH9IwggVvMIIEV6ADAgECAhBI/JO0YFWU
 # jTanyYqJ1pQWMA0GCSqGSIb3DQEBDAUAMHsxCzAJBgNVBAYTAkdCMRswGQYDVQQI
 # DBJHcmVhdGVyIE1hbmNoZXN0ZXIxEDAOBgNVBAcMB1NhbGZvcmQxGjAYBgNVBAoM
 # EUNvbW9kbyBDQSBMaW1pdGVkMSEwHwYDVQQDDBhBQUEgQ2VydGlmaWNhdGUgU2Vy
@@ -440,31 +443,31 @@ Catch {
 # IFNpZ25pbmcgQ0EgUjM2AhEApU3fcPvc8UxUgrjysXLKMTANBglghkgBZQMEAgEF
 # AKCBhDAYBgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgor
 # BgEEAYI3AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3
-# DQEJBDEiBCDiVv7pfoBLSb+H0zBcFIkplFOO1VrpczKN2gpJtEMROzANBgkqhkiG
-# 9w0BAQEFAASCAYBlEttuJwSjO0FBtq6+ZEqQu+KZeQOiPwBIDH0Fnwhe/tg154D+
-# 0kVmELXhmh5/tdoW5bWqnzqvHUR2dIuT1WL9tLlKvWy1hl86RVEQOPhO532I+ev4
-# 7V2wzuWqeBfeQOhcqF95jX5C1MShtVNpu271LA+TEg20UZEu4CBgdjXIx4EyiP4s
-# IMo4EtAQ8+A9yDzs+ilXXc5AEwu3KopVxPqWaByBdyl5XjbPeSOiqVvyy4cTe+pJ
-# IXlBDBZ5OyojsZqtLPmzNk3SFAzuN3hEVcOyrvQef+asnH6R46zaxojQr/wWgACJ
-# LV2wt6dYyyHYbGWvSQtOmiSUK+GcIuf4Ahq6bbeQ+TxU2XYMvvVqN+uS/wvJgR/q
-# /b3Fi/AGa0iR0muUHXyuTJxb8/+EMay9kMsbbXd08zDx9IYrcRMKqRyF+MY37wbo
-# TmCim6LZLV6M2miEv1oAEeddtmUvAXh7n1wbjW6QNqVQUpU4ROFerQtLLw6IswIj
-# q2SiSybslyKIFOGhggNMMIIDSAYJKoZIhvcNAQkGMYIDOTCCAzUCAQEwgZIwfTEL
+# DQEJBDEiBCD69yu6udWNPu/rFU/6VhfVshv5nXB/KKIKrjlGKOhr1jANBgkqhkiG
+# 9w0BAQEFAASCAYBQVdQqlgz80geWp5l0Aa/z27biC38YzM22WZVbYGXphsree3+T
+# nhEl5qtnVhWrrvVfcCNzGN0IpYO5u4/gUdtjbXAWiz0v8UzlOhotdeN85uU5ddSp
+# a3c8eNmnFDZrPNDewg5y0ohUGM16+pwG4YA6qT3aw08zvnwzN1kUI9LWDQfi7+cp
+# pmBefpB+GnVfJTB2PT+NQUO7kVFv9z578KtKFyZlnrW/MX3aHJE55QNlZlZut5u8
+# NtBXO5I4Gk1LR75WbfK+zGMbNNrHJbXAG+cJ6ZOVbHeIadMIz9suHfd0/+RqYelE
+# S3XZDM7Gx7XZAp0JI+CD2USco/QjMRaIUBJLM4UyBed8Qs4xRjvVcpi59QNpQX9t
+# zhv4Xqdvthc+oq30XblgmYYvPE13mpg8t3OQDXye48P4Podf5k6SHED/10xK7ITe
+# UFXQIXDxxqG0WhoUjVrjjdPqE5lqqAPDoDxlXt4fjFkQY+oZcWpGVXf80UNu0AxV
+# +/ytTPQ/FlZbu8uhggNMMIIDSAYJKoZIhvcNAQkGMYIDOTCCAzUCAQEwgZIwfTEL
 # MAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4GA1UE
 # BxMHU2FsZm9yZDEYMBYGA1UEChMPU2VjdGlnbyBMaW1pdGVkMSUwIwYDVQQDExxT
 # ZWN0aWdvIFJTQSBUaW1lIFN0YW1waW5nIENBAhEAjHegAI/00bDGPZ86SIONazAN
 # BglghkgBZQMEAgIFAKB5MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZI
-# hvcNAQkFMQ8XDTIyMDQyNjIyMDY1OFowPwYJKoZIhvcNAQkEMTIEMNWdp1popMJH
-# p4IX4v2GB2OlE7RBwKdDze68mAez+IyhSBm5BCslcoX5q4Y/okqbVjANBgkqhkiG
-# 9w0BAQEFAASCAgBnMsdYHWYGpo+PBKaXHaggH2Y0mQIqo1sykRCi/gEmNLZn1jzP
-# j5ZA8i7bmrcSgBPPuB0W2NB9zLhsh3Y/GUuvOy/ET76uM64mLDMP0Cposaibeowb
-# L6WVlctpMcwIRSKtkzJs274pLO4ksgSBZFXQ1QXGHLVhBV50IxjrHUJJrGYJKOx3
-# CUNNKk7unZepetPWEehlJ/D3a+i0mWWiBEP7WOoqoYyo2LI79yGZ4gC2/N/edaxf
-# rlO4z3NiP9OOEh0bXxzp3JRHBSl6/0b4LkmwftFrD2I5+7O7d1/PSh4KZha89Ts0
-# ca+hJ3AI9JNiiliTnjGGYDIbEYKtcV37Q8qm1GuJQsdShKtJY0OQkBs0AQ4FECeu
-# whUrC3yXNOb6H1yyvOoPMECHv25ItWWHW/N736WWkenRELG8IqKHAGiaVwLI7qHd
-# ih4QmBmaERq6f/d/aEyNZ89Cv+O2UhWOBwfHw3TrPZESsHcV2tKTLzw63OlwYdur
-# JnpeoyCZL6J282y0xTEIP3b95XET45+TcGWqgDE3jvjXBB4WDcecByT0pF6KJCA1
-# PmEAUmxH016u+4CPpuz8/OsIyfHHVK08X/suubTYpRoeTD6Hh2H+pMs6ykEpCfq+
-# y0IHpKmES2NgMbkAFrFLRHmoaLq8vCh5jL6Hg8xxVl62Ke+9eOOqcm3VRQ==
+# hvcNAQkFMQ8XDTIyMDQyNjIxNDQ0NVowPwYJKoZIhvcNAQkEMTIEMDrmniro8PqG
+# h2bmqaCDuj+78q3bpC4uLaKWxeMMIpUIIJmCcLWdlFW1FAfqYOhKMDANBgkqhkiG
+# 9w0BAQEFAASCAgBNQZYVM/RUVimoY3wfGmImi5EqEiEXVdmJ5JOd/pq9eRf8aNAr
+# htl3kYakLuVYyC//sFdnzL/QvymxOTb2iSa5+yd0Hru4S3DRpbKlYq8jYcePcOBL
+# cGUTPfVOdH++zeoJ+G5pFo+oqRaDOKLYlhIz6cv1dj9gE9lEJwbS+6gxT/8DR0FK
+# yhRCRCN9xXgetIIH4gDnbXbAIT5V2mQppYd1UAan2FJxPmZ82sfanmuGsihwYK62
+# fhyhDUqliRsAjtg33dNkBruBU1Qx8o1kTt1l2LRYuz+lX7pcJlpOQUo92G03r33a
+# 8hEwybeQQKUHkJUAkRU8UgaW5oj5MzoP6qRCuN8Cx2mf9QpndwIn+AEjWQ9n9IW6
+# YldMBReW1Bio18sn/X4t20v20Uq8SvAQO31IexPV9jDnCBEEDo+3pF0kzjkMaKF7
+# V42oryILQL7hYBUqXT/4nRp1cuO2exe5IGYFZYDFUmdBCPFmBMKPeSu/it3u33ah
+# nBNug8h8NJtodNTCImo7y9IivHlxMzqxAkXPhu/DU3p3EzWV/r7ebWII42hyoZhq
+# wPDpqXwoQlD2I7FL5MiNt9b1FGfpQ8XpQFITO+YxySE5j6n2F7XnhTXcb5jB6uS/
+# vtpoQALgVOpaEgtiGIKYTO9nNxuU/oAjY+32zp1gc6L48rOwacKG+PoFLg==
 # SIG # End signature block
